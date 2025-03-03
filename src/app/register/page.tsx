@@ -1,19 +1,47 @@
+"use client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const Register = () => {
+  const router = useRouter();
+
   return (
     <div className="container mx-auto p-5 my-5">
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap justify-center items-center">
         <form className="w-full md:w-1/2">
-          <h1 className="text-center text-2xl font-bold">SIGN UP!</h1>
+          <div className="flex flex-wrap justify-between items-center">
+            <h1 className="text-center text-2xl font-bold">SIGN UP!</h1>
+            <Image
+              src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
+              className="img-fluid"
+              alt="Phone image"
+              width={150}
+              height={150}
+            />
+          </div>
           <div className="mb-4">
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-lg font-medium">
+                Pronouns
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
             <div className="flex justify-between space-x-5">
               <div className="flex flex-col justify-evenly">
                 <label
                   htmlFor="firstname"
                   className="block text-lg font-medium"
                 >
-                  First Name
+                  <div className="flex">
+                    <p>First Name</p>
+                    <p className="text-red-600">*</p>
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -40,7 +68,10 @@ const Register = () => {
 
               <div className="flex flex-col justify-evenly">
                 <label htmlFor="lastname" className="block text-lg font-medium">
-                  Last Name
+                  <div className="flex">
+                    <p>Last Name</p>
+                    <p className="text-red-600">*</p>
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -52,51 +83,161 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-lg font-medium">
-              Email address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-lg font-medium">
-              Password:{" "}
-            </label>
-            <div className="relative">
+          <div className="flex flex-wrap justify-between">
+            <div className="mb-4">
+              <label htmlFor="username" className="block text-lg font-medium">
+                <div className="flex">
+                  <p>Username</p>
+                  <p className="text-red-600">*</p>
+                </div>
+              </label>
               <input
-                type="password"
-                id="password"
-                name="password"
+                type="username"
+                id="username"
+                name="username"
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 px-4 py-2 text-gray-500 hover:text-gray-700"
-              ></button>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-lg font-medium">
+                <div className="flex">
+                  <p>Email Address</p>
+                  <p className="text-red-600">*</p>
+                </div>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="confirmpass" className="block text-lg font-medium">
-              Confirm Password:{" "}
-            </label>
-            <div className="relative">
+          <hr className="my-5" />
+
+          <div className="flex flex-col justify-evenly space-y-5">
+            <div className="mb-4">
+              <label htmlFor="address" className="block text-lg font-medium">
+                <div className="flex">
+                  <p>Blk, Lot, Street.</p>
+                  <p className="text-red-600">*</p>
+                </div>
+              </label>
               <input
-                type="password"
-                id="confirmpass"
-                name="confirmpass"
+                type="address"
+                id="address"
+                name="address"
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 px-4 py-2 text-gray-500 hover:text-gray-700"
-              ></button>
+            </div>
+            <div className="flex justify-between space-x-5">
+              <div className="flex flex-col justify-evenly space-y-5">
+                <label
+                  htmlFor="municipality"
+                  className="block text-lg font-medium"
+                >
+                  Municipality
+                </label>
+                <input
+                  type="municipality"
+                  id="municipality"
+                  name="municipality"
+                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="flex flex-col justify-evenly space-y-5">
+                <label htmlFor="city" className="block text-lg font-medium">
+                  <div className="flex">
+                    <p>City</p>
+                    <p className="text-red-600">*</p>
+                  </div>
+                </label>
+                <input
+                  type="city"
+                  id="city"
+                  name="city"
+                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="flex flex-col justify-evenly space-y-5">
+                <label htmlFor="province" className="block text-lg font-medium">
+                  <div className="flex">
+                    <p>Province</p>
+                    <p className="text-red-600">*</p>
+                  </div>
+                </label>
+                <input
+                  type="province"
+                  id="province"
+                  name="province"
+                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col justify-evenly space-y-5">
+              <label htmlFor="country" className="block text-lg font-medium">
+                Country
+              </label>
+              <input
+                type="country"
+                id="country"
+                name="country"
+                placeholder="Philippines"
+                className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <hr className="my-5" />
+
+          <div className="flex space-x-5">
+            <div className="mb-4">
+              <label htmlFor="password" className="block text-lg font-medium">
+                <div className="flex">
+                  <p>Password: </p>
+                  <p className="text-red-600">*</p>
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 px-4 py-2 text-gray-500 hover:text-gray-700"
+                ></button>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="confirmpass"
+                className="block text-lg font-medium"
+              >
+                <div className="flex">
+                  <p>Confirm Password: </p>
+                  <p className="text-red-600">*</p>
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  id="confirmpass"
+                  name="confirmpass"
+                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 px-4 py-2 text-gray-500 hover:text-gray-700"
+                ></button>
+              </div>
             </div>
           </div>
 
@@ -109,18 +250,14 @@ const Register = () => {
 
           <div className="flex justify-center">
             <span className="text-sm">Have An Account? </span>
-            <a className="text-blue-600 text-sm">Sign In</a>
+            <button
+              className="text-blue-600 text-sm hover:text-amber-950"
+              onClick={() => router.push("/")}
+            >
+              Sign In
+            </button>
           </div>
         </form>
-        <div className="w-full md:w-1/2 flex justify-center">
-          <Image
-            src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
-            className="img-fluid"
-            alt="Phone image"
-            width={500}
-            height={500}
-          />
-        </div>
       </div>
     </div>
   );
