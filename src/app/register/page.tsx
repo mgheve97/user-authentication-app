@@ -32,7 +32,7 @@ const Register = () => {
     username: "",
     emailaddress: "",
     address1: "",
-    baranggay: "",
+    barangay: "",
     city: "",
     province: "",
     country: "Phillipines",
@@ -40,10 +40,15 @@ const Register = () => {
     confirmpassword: "",
   });
 
-  // States for Province, City and Baranggays
+  // States for Province, City and barangays
   const [Provinces, setProvinces] = useState<Location[]>([]);
   const [City, setCity] = useState<Location[]>([]);
   const [Barangay, setBarangay] = useState<Location[]>([]);
+
+  // Selected States for Province, City and Barangays
+  const [SelectedProvinces, setSelectedProvinces] = useState("");
+  const [SelectedCities, setSelectedCities] = useState("");
+  const [SelectedBarangays, setSelectedBarangays] = useState("");
 
   // Visibility of passwords
   const [isPasswordVisible, setisPasswordVisible] = useState(false);
@@ -60,9 +65,24 @@ const Register = () => {
       ...prevInfo,
       [name]: value,
     }));
+
+    if (name === "province") {
+      setSelectedProvinces(value);
+      setSelectedCities("");
+      setSelectedBarangays("");
+    }
+
+    if (name === "city") {
+      setSelectedCities(value);
+      setSelectedBarangays("");
+    }
+
+    if (name === "barangay") {
+      setSelectedBarangays(value);
+    }
   };
 
-  // Fetching the Province, City, Baranggay
+  // Fetching the Province, City, barangay
   useEffect(() => {
     const fetchProvince = async () => {
       try {
@@ -79,8 +99,16 @@ const Register = () => {
 
   useEffect(() => {
     const fetchCity = async () => {
+      if (!SelectedProvinces) {
+        setCity([]);
+        setBarangay([]);
+        return;
+      }
+
       try {
-        const response = await fetch("https://psgc.gitlab.io/api/cities");
+        const response = await fetch(
+          `https://psgc.gitlab.io/api/provinces/${SelectedProvinces}/cities-municipalities/`
+        );
         const data: Location[] = await response.json();
         setCity(data);
       } catch (error) {
@@ -89,12 +117,19 @@ const Register = () => {
     };
 
     fetchCity();
-  }, []);
+  }, [SelectedProvinces]);
 
   useEffect(() => {
+    if (!SelectedCities) {
+      setBarangay([]);
+      return;
+    }
+
     const fetchBarangay = async () => {
       try {
-        const response = await fetch("https://psgc.gitlab.io/api/barangays");
+        const response = await fetch(
+          `https://psgc.gitlab.io/api/cities-municipalities/${SelectedCities}/barangays/`
+        );
         const data: Location[] = await response.json();
         setBarangay(data);
       } catch (error) {
@@ -102,9 +137,15 @@ const Register = () => {
       }
     };
     fetchBarangay();
-  }, []);
+  }, [SelectedCities]);
 
   // console.log(informationdata);
+
+  // Go to Login
+  const GotoLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    router.push("/");
+  };
 
   return (
     <div className="container mx-auto p-5 my-5">
@@ -133,6 +174,7 @@ const Register = () => {
               <select
                 name="honorific"
                 value={informationdata.honorific}
+                onChange={handleChange}
                 className="border rounded-md h-10 px-4 py-2"
               >
                 <option value="">-</option>
@@ -283,7 +325,7 @@ const Register = () => {
             </div>
 
             {/* Province, Cities, and Barangays */}
-            <div className="flex justify-between space-x-5">
+            <div className="flex justify-between space-x-5 pt-5">
               {/* Provinces */}
               <div className="flex flex-col justify-evenly space-y-5">
                 <label htmlFor="province" className="block text-lg font-medium">
@@ -295,13 +337,13 @@ const Register = () => {
                 <select
                   id="province"
                   name="province"
-                  value={informationdata.province}
+                  value={SelectedProvinces}
                   onChange={handleChange}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Select Province</option>
                   {Provinces.map((province) => (
-                    <option key={province.code} value={province.name}>
+                    <option key={province.code} value={province.code}>
                       {province.name}
                     </option>
                   ))}
@@ -319,13 +361,14 @@ const Register = () => {
                 <select
                   id="city"
                   name="city"
-                  value={informationdata.city}
+                  value={SelectedCities}
                   onChange={handleChange}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={!SelectedProvinces}
                 >
                   <option value="">Select Cities</option>
                   {City.map((cities) => (
-                    <option key={cities.code} value={cities.name}>
+                    <option key={cities.code} value={cities.code}>
                       {cities.name}
                     </option>
                   ))}
@@ -334,22 +377,20 @@ const Register = () => {
 
               {/* barangays */}
               <div className="flex flex-col justify-evenly space-y-5">
-                <label
-                  htmlFor="baranggay"
-                  className="block text-lg font-medium"
-                >
-                  Baranggay
+                <label htmlFor="barangay" className="block text-lg font-medium">
+                  barangay
                 </label>
                 <select
-                  id="baranggay"
-                  name="baranggay"
-                  value={informationdata.baranggay}
+                  id="barangay"
+                  name="barangay"
+                  value={SelectedBarangays}
                   onChange={handleChange}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={!SelectedCities}
                 >
                   <option value="">Select Barangay</option>
                   {Barangay.map((barangays) => (
-                    <option key={barangays.code} value={barangays.name}>
+                    <option key={barangays.code} value={barangays.code}>
                       {barangays.name}
                     </option>
                   ))}
@@ -508,7 +549,7 @@ const Register = () => {
             <span className="text-sm">Have An Account? </span>
             <button
               className="text-blue-600 text-sm hover:text-amber-950"
-              onClick={() => router.push("/")}
+              onClick={GotoLogin}
             >
               Sign In
             </button>
