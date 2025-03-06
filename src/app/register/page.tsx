@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface Location {
   code: string;
@@ -11,7 +12,7 @@ interface Location {
 const Register = () => {
   const router = useRouter();
 
-  // Options for the honorifics
+  // Options for the honorifics and suffixes
   const honorifics = [
     "Mr.",
     "Ms.",
@@ -21,8 +22,13 @@ const Register = () => {
     "Prefer not to say",
   ];
 
+  const suffixes = ["Jr.", "Sr.", "III", "IV", "V"];
+
+  const sex = ["Male", "Female"];
+
   // Main Information Data
   const [informationdata, setInformationData] = useState({
+    id: "",
     honorific: "",
     firstname: "",
     middlename: "",
@@ -55,9 +61,23 @@ const Register = () => {
   const [isConfirmPasswordVisible, setisConfirmPasswordVisible] =
     useState(false);
 
-  // Handling Changes when typing
+  // Errors
+  const [validerrors, setvaliderrors] = useState<{ [key: string]: string }>({});
+
+  // Generating a unique ID for each register
+  const GenerateUniqueID = () => {
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, "0");
+
+    const uniqueID = `${year}${month}${uuidv4().split("-")[0]}`;
+
+    return uniqueID;
+  };
+
+  // Handling Changes when typing (Only For Required)
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    field: string
   ) => {
     const { name, value } = e.target;
 
@@ -66,6 +86,7 @@ const Register = () => {
       [name]: value,
     }));
 
+    // Province, City, Baranggay - Auto Clear if selected change
     if (name === "province") {
       setSelectedProvinces(value);
       setSelectedCities("");
@@ -80,6 +101,432 @@ const Register = () => {
     if (name === "barangay") {
       setSelectedBarangays(value);
     }
+
+    // Initial Real-Time Validation
+    switch (field) {
+      case "honorific":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            honorific: "Honorific is required",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            honorific: "",
+          }));
+        }
+        break;
+
+      case "firstname":
+        if (value.length <= 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "First Name is required",
+          }));
+        } else if (!/^[a-zA-z\s'-]+$/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "First name should only contain letters",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "middlename":
+        if (!/^[a-zA-z\s'-]+$/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "First name should only contain letters",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "lastname":
+        if (value.length <= 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            lastname: "Last Name is required",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "sex":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            sex: "Please select your sex",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            sex: "",
+          }));
+        }
+        break;
+
+      case "username":
+        if (value.length < 8 || value.length > 20) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            username: "Username must be 8 to 20 characters",
+          }));
+        } else if (value.includes(informationdata.username)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            username: "Username is taken",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+
+        break;
+      case "emailaddress":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Email is required",
+          }));
+        } else if (
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(informationdata.emailaddress)
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Please Enter a valid email address!",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "province":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            province: "Please select a province",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            province: "",
+          }));
+        }
+        break;
+      case "city":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            city: "Please select a city",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            city: "",
+          }));
+        }
+        break;
+
+      case "barangay":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            barangay: "Please select a barangay",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            barangay: "",
+          }));
+        }
+        break;
+
+      case "password":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password is Required",
+          }));
+        } else if (
+          (value.length < 8 && value.length > 0) ||
+          value.length > 50
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must be at least 8 to 50 characters",
+          }));
+        } else if (!/[A-Z]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least one uppercase letter",
+          }));
+        } else if (!/[0-9]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least one numerical",
+          }));
+        } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least special character",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "",
+          }));
+        }
+        break;
+      case "confirmpassword":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            confirmpassword: "Password is Required",
+          }));
+        } else if (value !== informationdata.password) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            confirmpassword: "Password must be the same",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "",
+          }));
+        }
+        break;
+    }
+  };
+
+  // Blur
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>,
+    field: string
+  ) => {
+    const { value } = e.target;
+
+    // Validating on blur
+    switch (field) {
+      case "honorific":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            honorific: "Honorific is required",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            honorific: "",
+          }));
+        }
+        break;
+
+      case "firstname":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "First name is Required",
+          }));
+        } else if (!/^[a-zA-z\s'-]+$/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "First name should only contain letters",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "lastname":
+        if (value.length <= 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            lastname: "Last Name is required",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            lastname: "",
+          }));
+        }
+        break;
+
+      case "sex":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            sex: "Please select your sex",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            sex: "",
+          }));
+        }
+        break;
+
+      case "username":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            username: "Username is Required",
+          }));
+        } else if (
+          (value.length < 8 && value.length > 0) ||
+          value.length > 20
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            username: "Username must be 8 to 20 characters",
+          }));
+        } else if (value.includes(informationdata.username)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            username: "Username is taken",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "emailaddress":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Email is required",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            firstname: "",
+          }));
+        }
+        break;
+
+      case "province":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            province: "Please select a province",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            province: "",
+          }));
+        }
+        break;
+
+      case "city":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            city: "Please select a city",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            city: "",
+          }));
+        }
+        break;
+
+      case "barangay":
+        if (value === "default" || value === "") {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            barangay: "Please select a barangay",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            barangay: "",
+          }));
+        }
+        break;
+      case "password":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password is Required",
+          }));
+        } else if (
+          (value.length < 8 && value.length > 0) ||
+          value.length > 50
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must be at least 8 to 50 characters",
+          }));
+        } else if (!/[A-Z]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least one uppercase letter",
+          }));
+        } else if (!/[0-9]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least one numerical",
+          }));
+        } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "Password must contain at least special character",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "",
+          }));
+        }
+        break;
+
+      case "confirmpassword":
+        if (value.length === 0) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            confirmpassword: "Password is Required",
+          }));
+        } else if (value !== informationdata.password) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            confirmpassword: "Password must be the same",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            password: "",
+          }));
+        }
+        break;
+    }
+    console.log("Value:", value);
+    console.log(validerrors.firstname);
   };
 
   // Fetching the Province, City, barangay
@@ -139,11 +586,18 @@ const Register = () => {
     fetchBarangay();
   }, [SelectedCities]);
 
-  // console.log(informationdata);
+  console.log(informationdata);
 
   // Go to Login
   const GotoLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    router.push("/");
+  };
+
+  // Registering the Information
+  const HandleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+
     router.push("/");
   };
 
@@ -174,8 +628,9 @@ const Register = () => {
               <select
                 name="honorific"
                 value={informationdata.honorific}
-                onChange={handleChange}
                 className="border rounded-md h-10 px-4 py-2"
+                onChange={(e) => handleChange(e, "honorific")}
+                onBlur={(e) => handleBlur(e, "honorific")}
               >
                 <option value="">-</option>
                 {honorifics.map((honorific, index) => (
@@ -184,6 +639,11 @@ const Register = () => {
                   </option>
                 ))}
               </select>
+              {validerrors.honorific && (
+                <p className="text-red-600 text-[10px]">
+                  * {validerrors.honorific}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between space-x-5">
@@ -204,9 +664,18 @@ const Register = () => {
                   id="firstname"
                   name="firstname"
                   value={informationdata.firstname}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "firstname")}
+                  onBlur={(e) => handleBlur(e, "firstname")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  minLength={1}
+                  maxLength={50}
+                  required
                 />
+                {validerrors.firstname && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.firstname}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col justify-evenly">
@@ -221,11 +690,18 @@ const Register = () => {
                   id="middlename"
                   name="middlename"
                   value={informationdata.middlename}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "middlename")}
+                  onBlur={(e) => handleBlur(e, "middlename")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                {validerrors.middlename && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.middlename}
+                  </p>
+                )}
               </div>
-
+            </div>
+            <div className="flex justify-between space-x-5">
               <div className="flex flex-col justify-evenly">
                 <label htmlFor="lastname" className="block text-lg font-medium">
                   <div className="flex">
@@ -240,23 +716,66 @@ const Register = () => {
                   id="lastname"
                   name="lastname"
                   value={informationdata.lastname}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "lastname")}
+                  onBlur={(e) => handleBlur(e, "lastname")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                {validerrors.lastname && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.lastname}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col justify-evenly">
+                <label htmlFor="sex" className="block text-lg font-medium">
+                  <div className="flex">
+                    <p>Sex</p>
+                    {informationdata.sex === "" && (
+                      <p className="text-red-600">*</p>
+                    )}
+                  </div>
+                </label>
+                <select
+                  name="sex"
+                  value={informationdata.sex}
+                  className="border rounded-md h-10 px-4 py-2"
+                  onChange={(e) => handleChange(e, "sex")}
+                  onBlur={(e) => handleBlur(e, "sex")}
+                  required
+                >
+                  <option value="">-</option>
+                  {sex.map((gender, index) => (
+                    <option key={index} value={gender}>
+                      {gender}
+                    </option>
+                  ))}
+                </select>
+                {validerrors.sex && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.sex}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col justify-evenly">
                 <label htmlFor="suffixes" className="block text-lg font-medium">
                   Suffixes
                 </label>
-                <input
-                  type="text"
-                  id="suffixes"
+                <select
                   name="suffixes"
                   value={informationdata.suffixes}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                  className="border rounded-md h-10 px-4 py-2"
+                  onChange={(e) => handleChange(e, "honorific")}
+                  onBlur={(e) => handleBlur(e, "honorific")}
+                >
+                  <option value="">-</option>
+                  {suffixes.map((suffix, index) => (
+                    <option key={index} value={suffix}>
+                      {suffix}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -276,9 +795,18 @@ const Register = () => {
                 id="username"
                 name="username"
                 value={informationdata.username}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e, "username")}
+                onBlur={(e) => handleBlur(e, "username")}
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                minLength={8}
+                maxLength={20}
+                required
               />
+              {validerrors.username && (
+                <p className="text-red-600 text-[10px]">
+                  * {validerrors.username}
+                </p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -296,9 +824,18 @@ const Register = () => {
                 id="emailaddress"
                 name="emailaddress"
                 value={informationdata.emailaddress}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e, "emailaddress")}
+                onBlur={(e) => handleBlur(e, "emailaddress")}
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                minLength={6}
+                maxLength={254}
+                required
               />
+              {validerrors.emailaddress && (
+                <p className="text-red-600 text-[10px]">
+                  * {validerrors.emailaddress}
+                </p>
+              )}
             </div>
           </div>
 
@@ -309,23 +846,20 @@ const Register = () => {
             {/* Address 1 */}
             <div className="mb-4">
               <label htmlFor="address1" className="block text-lg font-medium">
-                <div className="flex">
-                  <p>Blk, Lot, Street, Subdivision</p>
-                  <p className="text-red-600">*</p>
-                </div>
+                Blk, Lot, Street, Subdivision
               </label>
               <input
                 type="address1"
                 id="address1"
                 name="address1"
                 value={informationdata.address1}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e, "")}
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Province, Cities, and Barangays */}
-            <div className="flex justify-between space-x-5 pt-5">
+            <div className="flex flex-col justify-between space-y-5 pt-5">
               {/* Provinces */}
               <div className="flex flex-col justify-evenly space-y-5">
                 <label htmlFor="province" className="block text-lg font-medium">
@@ -338,8 +872,10 @@ const Register = () => {
                   id="province"
                   name="province"
                   value={SelectedProvinces}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "province")}
+                  onBlur={(e) => handleBlur(e, "province")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
                 >
                   <option value="">Select Province</option>
                   {Provinces.map((province) => (
@@ -348,6 +884,11 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
+                {validerrors.province && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.province}
+                  </p>
+                )}
               </div>
 
               {/* Cities */}
@@ -362,9 +903,11 @@ const Register = () => {
                   id="city"
                   name="city"
                   value={SelectedCities}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "city")}
+                  onBlur={(e) => handleBlur(e, "city")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={!SelectedProvinces}
+                  required
                 >
                   <option value="">Select Cities</option>
                   {City.map((cities) => (
@@ -373,20 +916,30 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
+                {validerrors.city && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.city}
+                  </p>
+                )}
               </div>
 
               {/* barangays */}
               <div className="flex flex-col justify-evenly space-y-5">
                 <label htmlFor="barangay" className="block text-lg font-medium">
-                  barangay
+                  <div className="flex">
+                    <p>Barangay</p>
+                    <p className="text-red-600">*</p>
+                  </div>
                 </label>
                 <select
                   id="barangay"
                   name="barangay"
                   value={SelectedBarangays}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "barangay")}
+                  onBlur={(e) => handleBlur(e, "barangay")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={!SelectedCities}
+                  required
                 >
                   <option value="">Select Barangay</option>
                   {Barangay.map((barangays) => (
@@ -395,6 +948,11 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
+                {validerrors.barangay && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.barangay}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -432,9 +990,18 @@ const Register = () => {
                   id="password"
                   name="password"
                   value={informationdata.password}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e, "password")}
+                  onBlur={(e) => handleBlur(e, "password")}
                   className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  minLength={8}
+                  maxLength={50}
+                  required
                 />
+                {validerrors.password && (
+                  <p className="text-red-600 text-[10px]">
+                    * {validerrors.password}
+                  </p>
+                )}
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex justify-center items-center px-4"
@@ -448,6 +1015,7 @@ const Register = () => {
                       alt="Phone image"
                       width={50}
                       height={50}
+                      className="opacity-5"
                     />
                   ) : (
                     <Image
@@ -455,6 +1023,7 @@ const Register = () => {
                       alt="Phone image"
                       width={50}
                       height={50}
+                      className="opacity-5"
                     />
                   )}
                 </button>
@@ -480,9 +1049,16 @@ const Register = () => {
                     id="confirmpassword"
                     name="confirmpassword"
                     value={informationdata.confirmpassword}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange(e, "confirmpassword")}
+                    onBlur={(e) => handleBlur(e, "confirmpassword")}
                     className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
                   />
+                  {validerrors.confirmpassword && (
+                    <p className="text-red-600 text-[10px]">
+                      * {validerrors.confirmpassword}
+                    </p>
+                  )}
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 flex justify-center items-center px-4"
@@ -496,6 +1072,7 @@ const Register = () => {
                         alt="Phone image"
                         width={50}
                         height={50}
+                        className="opacity-5"
                       />
                     ) : (
                       <Image
@@ -503,6 +1080,7 @@ const Register = () => {
                         alt="Phone image"
                         width={50}
                         height={50}
+                        className="opacity-5"
                       />
                     )}
                   </button>
@@ -541,6 +1119,7 @@ const Register = () => {
           <button
             className="mb-4 w-full py-2 bg-indigo-600 text-white rounded-md text-lg hover:bg-indigo-700"
             type="submit"
+            onClick={HandleRegister}
           >
             REGISTER
           </button>
