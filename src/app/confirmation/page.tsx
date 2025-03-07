@@ -8,6 +8,10 @@ const Confirmation = () => {
         <hr className="border-1 border-black" />
         <div className="flex flex-col">
           <h1 className="">All info should display here</h1>
+          <div className="flex justify-between items-center">
+            <button className="">Update</button>
+            <button className="">Register</button>
+          </div>
         </div>
       </div>
     </main>
