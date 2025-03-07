@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useUserData, UserData } from "../context/userdatacontext";
 
 interface Location {
   code: string;
@@ -11,6 +12,7 @@ interface Location {
 
 const Register = () => {
   const router = useRouter();
+  const { register, userInformation, errors } = useUserData();
 
   // Options for the honorifics and suffixes
   const honorifics = [
@@ -63,6 +65,9 @@ const Register = () => {
 
   // Errors
   const [validerrors, setvaliderrors] = useState<{ [key: string]: string }>({});
+  const [visibleErrors, setVisibleErrors] = useState<{ [key: string]: string }>(
+    {}
+  );
 
   // Generating a unique ID for each register
   const GenerateUniqueID = () => {
@@ -141,12 +146,12 @@ const Register = () => {
         if (!/^[a-zA-z\s'-]+$/.test(value)) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "First name should only contain letters",
+            middlename: "First name should only contain letters",
           }));
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            middlename: "",
           }));
         }
         break;
@@ -160,7 +165,7 @@ const Register = () => {
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            lastname: "",
           }));
         }
         break;
@@ -185,7 +190,10 @@ const Register = () => {
             ...prevErrors,
             username: "Username must be 8 to 20 characters",
           }));
-        } else if (value.includes(informationdata.username)) {
+        } else if (
+          Array.isArray(userInformation) &&
+          userInformation.some((user: UserData) => user.username === value)
+        ) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             username: "Username is taken",
@@ -193,7 +201,7 @@ const Register = () => {
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            username: "",
           }));
         }
 
@@ -204,17 +212,23 @@ const Register = () => {
             ...prevErrors,
             emailaddress: "Email is required",
           }));
-        } else if (
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(informationdata.emailaddress)
-        ) {
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             emailaddress: "Please Enter a valid email address!",
           }));
+        } else if (
+          Array.isArray(userInformation) &&
+          userInformation.some((user: UserData) => user.emailaddress === value)
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailadress: "Email is taken",
+          }));
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            emailaddress: "",
           }));
         }
         break;
@@ -359,6 +373,20 @@ const Register = () => {
         }
         break;
 
+      case "middlename":
+        if (!/^[a-zA-z\s'-]+$/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            middlename: "Middle name should only contain letters",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            middlename: "",
+          }));
+        }
+        break;
+
       case "lastname":
         if (value.length <= 0) {
           setvaliderrors((prevErrors) => ({
@@ -401,7 +429,10 @@ const Register = () => {
             ...prevErrors,
             username: "Username must be 8 to 20 characters",
           }));
-        } else if (value.includes(informationdata.username)) {
+        } else if (
+          Array.isArray(userInformation) &&
+          userInformation.some((user: UserData) => user.username === value)
+        ) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             username: "Username is taken",
@@ -409,7 +440,7 @@ const Register = () => {
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            username: "",
           }));
         }
         break;
@@ -420,10 +451,23 @@ const Register = () => {
             ...prevErrors,
             emailaddress: "Email is required",
           }));
+        } else if (
+          Array.isArray(userInformation) &&
+          userInformation.some((user: UserData) => user.emailaddress === value)
+        ) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Email is taken",
+          }));
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Please Enter a valid email address!",
+          }));
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            firstname: "",
+            emailaddress: "",
           }));
         }
         break;
@@ -512,21 +556,22 @@ const Register = () => {
             ...prevErrors,
             confirmpassword: "Password is Required",
           }));
+          return;
         } else if (value !== informationdata.password) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
-            confirmpassword: "Password must be the same",
+            confirmpassword: "Password do not match",
           }));
+          return;
         } else {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             password: "",
           }));
+          return;
         }
         break;
     }
-    console.log("Value:", value);
-    console.log(validerrors.firstname);
   };
 
   // Fetching the Province, City, barangay
@@ -586,7 +631,25 @@ const Register = () => {
     fetchBarangay();
   }, [SelectedCities]);
 
-  console.log(informationdata);
+  // Timeout for Errors
+  useEffect(() => {
+    Object.keys(errors).forEach((key) => {
+      if (errors[key]) {
+        setVisibleErrors((prevErrors) => ({
+          ...prevErrors,
+          [key]: errors[key],
+        }));
+
+        // Setting a timer of the text before disappearing
+        setTimeout(() => {
+          setVisibleErrors((prevErrors) => {
+            const { [key]: removed, ...rest } = prevErrors;
+            return rest;
+          });
+        }, 3000);
+      }
+    });
+  }, [errors]);
 
   // Go to Login
   const GotoLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -598,7 +661,16 @@ const Register = () => {
   const HandleRegister = (e: React.FormEvent) => {
     e.preventDefault();
 
-    router.push("/");
+    const newID = GenerateUniqueID();
+
+    setInformationData((prevData) => {
+      const UpdatedInformationData = { ...prevData, id: newID };
+      console.log(UpdatedInformationData);
+      return UpdatedInformationData;
+    });
+
+    register(informationdata);
+    // router.push("/confirmation/");
   };
 
   return (
@@ -644,6 +716,11 @@ const Register = () => {
                   * {validerrors.honorific}
                 </p>
               )}
+              {visibleErrors.honorific && (
+                <p className="text-red-600 text-[10px]">
+                  * {visibleErrors.honorific}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between space-x-5">
@@ -676,6 +753,11 @@ const Register = () => {
                     * {validerrors.firstname}
                   </p>
                 )}
+                {visibleErrors.firstname && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.firstname}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col justify-evenly">
@@ -697,6 +779,11 @@ const Register = () => {
                 {validerrors.middlename && (
                   <p className="text-red-600 text-[10px]">
                     * {validerrors.middlename}
+                  </p>
+                )}
+                {visibleErrors.middlename && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.middlename}
                   </p>
                 )}
               </div>
@@ -723,6 +810,11 @@ const Register = () => {
                 {validerrors.lastname && (
                   <p className="text-red-600 text-[10px]">
                     * {validerrors.lastname}
+                  </p>
+                )}
+                {visibleErrors.lastname && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.lastname}
                   </p>
                 )}
               </div>
@@ -754,6 +846,11 @@ const Register = () => {
                 {validerrors.sex && (
                   <p className="text-red-600 text-[10px]">
                     * {validerrors.sex}
+                  </p>
+                )}
+                {visibleErrors.sex && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.sex}
                   </p>
                 )}
               </div>
@@ -807,6 +904,11 @@ const Register = () => {
                   * {validerrors.username}
                 </p>
               )}
+              {visibleErrors.username && (
+                <p className="text-red-600 text-[10px]">
+                  * {visibleErrors.username}
+                </p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -834,6 +936,11 @@ const Register = () => {
               {validerrors.emailaddress && (
                 <p className="text-red-600 text-[10px]">
                   * {validerrors.emailaddress}
+                </p>
+              )}
+              {visibleErrors.emailaddress && (
+                <p className="text-red-600 text-[10px]">
+                  * {visibleErrors.emailaddress}
                 </p>
               )}
             </div>
@@ -889,6 +996,11 @@ const Register = () => {
                     * {validerrors.province}
                   </p>
                 )}
+                {visibleErrors.province && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.province}
+                  </p>
+                )}
               </div>
 
               {/* Cities */}
@@ -921,6 +1033,11 @@ const Register = () => {
                     * {validerrors.city}
                   </p>
                 )}
+                {visibleErrors.city && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.city}
+                  </p>
+                )}
               </div>
 
               {/* barangays */}
@@ -951,6 +1068,11 @@ const Register = () => {
                 {validerrors.barangay && (
                   <p className="text-red-600 text-[10px]">
                     * {validerrors.barangay}
+                  </p>
+                )}
+                {visibleErrors.barangay && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.barangay}
                   </p>
                 )}
               </div>
@@ -1000,6 +1122,11 @@ const Register = () => {
                 {validerrors.password && (
                   <p className="text-red-600 text-[10px]">
                     * {validerrors.password}
+                  </p>
+                )}
+                {visibleErrors.password && (
+                  <p className="text-red-600 text-[10px]">
+                    * {visibleErrors.password}
                   </p>
                 )}
                 <button
@@ -1059,6 +1186,11 @@ const Register = () => {
                       * {validerrors.confirmpassword}
                     </p>
                   )}
+                  {visibleErrors.confirmpassword && (
+                    <p className="text-red-600 text-[10px]">
+                      * {visibleErrors.confirmpassword}
+                    </p>
+                  )}
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 flex justify-center items-center px-4"
@@ -1088,25 +1220,13 @@ const Register = () => {
 
                 <hr className="my-5" />
 
-                {/* Do this when the project is done */}
-                {/* <div className="">
-                  <div className="flex flex wrap">
-                    {informationdata.username.length < 8 &&
-                    informationdata.username.length > 0 ? (
-                      <div className="flex justify-evenly">
-                        <div className="w-1 h-1 bg-red-500 rounded-full px-1 py-1" />
-                        <p>Username is at least 8 Characters</p>
-                      </div>
-                    ) : informationdata.username.length === 0 ? (
-                      <div className="flex">
-                        <div className="w-1 h-1 bg-gray-500 rounded-full" />
-                        <p>Username is empty</p>
-                      </div>
-                    ) : (
-                      <div className="w-1 h-1 bg-green-500 rounded-full" />
-                    )}
+                {/* Showing where the errors */}
+                <div className="m-5">
+                  <div className="border-1 border-black p-5">
+                    <h1 className="">Checklist: </h1>
+                    <hr className="" />
                   </div>
-                </div> */}
+                </div>
 
                 <button
                   type="button"
