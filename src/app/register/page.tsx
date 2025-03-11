@@ -3,12 +3,29 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useUserData, UserData } from "../context/userdatacontext";
+import { useUserData } from "../context/userdatacontext";
 
 interface Location {
   code: string;
   name: string;
 }
+
+type FieldNames =
+  | "honorific"
+  | "firstname"
+  | "middlename"
+  | "lastname"
+  | "sex"
+  | "username"
+  | "emailaddress"
+  | "province"
+  | "city"
+  | "barangay"
+  | "password"
+  | "confirmpassword"
+  | "birthdate"
+  | "age"
+  | "address1";
 
 const Register = () => {
   const router = useRouter();
@@ -37,6 +54,8 @@ const Register = () => {
     lastname: "",
     sex: "",
     suffixes: "",
+    birthdate: "",
+    age: 0,
     username: "",
     emailaddress: "",
     address1: "",
@@ -69,6 +88,9 @@ const Register = () => {
     {}
   );
 
+  // Restricting Futures Dates
+  const [maxDate, setMaxDate] = useState("");
+
   // Generating a unique ID for each register
   const GenerateUniqueID = () => {
     const year = new Date().getFullYear();
@@ -79,34 +101,31 @@ const Register = () => {
     return uniqueID;
   };
 
-  // Handling Changes when typing (Only For Required)
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    field: string
-  ) => {
-    const { name, value } = e.target;
+  // Calculating the Age based on the birthdate
+  const calculateAge = (birthdate: string) => {
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    setInformationData((prevInfo) => ({
-      ...prevInfo,
-      [name]: value,
-    }));
-
-    // Province, City, Baranggay - Auto Clear if selected change
-    if (name === "province") {
-      setSelectedProvinces(value);
-      setSelectedCities("");
-      setSelectedBarangays("");
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
     }
 
-    if (name === "city") {
-      setSelectedCities(value);
-      setSelectedBarangays("");
-    }
+    return age;
+  };
 
-    if (name === "barangay") {
-      setSelectedBarangays(value);
-    }
-
+  // Handling Validation Logics
+  const validateField = (field: FieldNames, value: string): void => {
+    const isUsernameTaken = userInformation.some(
+      (user) => user.username === value
+    );
+    const isEmailTaken = userInformation.some(
+      (user) => user.emailaddress === value
+    );
     // Initial Real-Time Validation
     switch (field) {
       case "honorific":
@@ -190,10 +209,7 @@ const Register = () => {
             ...prevErrors,
             username: "Username must be 8 to 20 characters",
           }));
-        } else if (
-          Array.isArray(userInformation) &&
-          userInformation.some((user: UserData) => user.username === value)
-        ) {
+        } else if (isUsernameTaken) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             username: "Username is taken",
@@ -217,13 +233,15 @@ const Register = () => {
             ...prevErrors,
             emailaddress: "Please Enter a valid email address!",
           }));
-        } else if (
-          Array.isArray(userInformation) &&
-          userInformation.some((user: UserData) => user.emailaddress === value)
-        ) {
+        } else if (isEmailTaken) {
           setvaliderrors((prevErrors) => ({
             ...prevErrors,
             emailadress: "Email is taken",
+          }));
+        } else if (isEmailTaken) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            emailaddress: "Email is taken",
           }));
         } else {
           setvaliderrors((prevErrors) => ({
@@ -328,250 +346,72 @@ const Register = () => {
           }));
         }
         break;
+      case "birthdate":
+        if (!value) {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            birthdate: "Please select your birth date",
+          }));
+        } else {
+          setvaliderrors((prevErrors) => ({
+            ...prevErrors,
+            birthdate: "",
+          }));
+        }
+        break;
     }
+  };
+
+  // Handling Changes when typing (Only For Required)
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    field: FieldNames
+  ) => {
+    const { name, value } = e.target;
+
+    if (field === "birthdate") {
+      const calculatedAge = calculateAge(value);
+
+      setInformationData((prevInfo) => ({
+        ...prevInfo,
+        age: calculatedAge,
+      }));
+      console.log(informationdata);
+    } else {
+      setInformationData((prevInfo) => ({
+        ...prevInfo,
+        [name]: value,
+      }));
+      console.log(informationdata);
+    }
+
+    // Province, City, Baranggay - Auto Clear if selected change
+    if (name === "province") {
+      setSelectedProvinces(value);
+      setSelectedCities("");
+      setSelectedBarangays("");
+    }
+
+    if (name === "city") {
+      setSelectedCities(value);
+      setSelectedBarangays("");
+    }
+
+    if (name === "barangay") {
+      setSelectedBarangays(value);
+    }
+
+    validateField(field, value);
   };
 
   // Blur
   const handleBlur = (
     e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>,
-    field: string
+    field: FieldNames
   ) => {
     const { value } = e.target;
 
-    // Validating on blur
-    switch (field) {
-      case "honorific":
-        if (value === "default" || value === "") {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            honorific: "Honorific is required",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            honorific: "",
-          }));
-        }
-        break;
-
-      case "firstname":
-        if (value.length === 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            firstname: "First name is Required",
-          }));
-        } else if (!/^[a-zA-z\s'-]+$/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            firstname: "First name should only contain letters",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            firstname: "",
-          }));
-        }
-        break;
-
-      case "middlename":
-        if (!/^[a-zA-z\s'-]+$/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            middlename: "Middle name should only contain letters",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            middlename: "",
-          }));
-        }
-        break;
-
-      case "lastname":
-        if (value.length <= 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            lastname: "Last Name is required",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            lastname: "",
-          }));
-        }
-        break;
-
-      case "sex":
-        if (value === "default" || value === "") {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            sex: "Please select your sex",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            sex: "",
-          }));
-        }
-        break;
-
-      case "username":
-        if (value.length === 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            username: "Username is Required",
-          }));
-        } else if (
-          (value.length < 8 && value.length > 0) ||
-          value.length > 20
-        ) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            username: "Username must be 8 to 20 characters",
-          }));
-        } else if (
-          Array.isArray(userInformation) &&
-          userInformation.some((user: UserData) => user.username === value)
-        ) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            username: "Username is taken",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            username: "",
-          }));
-        }
-        break;
-
-      case "emailaddress":
-        if (value.length === 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            emailaddress: "Email is required",
-          }));
-        } else if (
-          Array.isArray(userInformation) &&
-          userInformation.some((user: UserData) => user.emailaddress === value)
-        ) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            emailaddress: "Email is taken",
-          }));
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            emailaddress: "Please Enter a valid email address!",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            emailaddress: "",
-          }));
-        }
-        break;
-
-      case "province":
-        if (value === "default" || value === "") {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            province: "Please select a province",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            province: "",
-          }));
-        }
-        break;
-
-      case "city":
-        if (value === "default" || value === "") {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            city: "Please select a city",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            city: "",
-          }));
-        }
-        break;
-
-      case "barangay":
-        if (value === "default" || value === "") {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            barangay: "Please select a barangay",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            barangay: "",
-          }));
-        }
-        break;
-      case "password":
-        if (value.length === 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "Password is Required",
-          }));
-        } else if (
-          (value.length < 8 && value.length > 0) ||
-          value.length > 50
-        ) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "Password must be at least 8 to 50 characters",
-          }));
-        } else if (!/[A-Z]/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "Password must contain at least one uppercase letter",
-          }));
-        } else if (!/[0-9]/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "Password must contain at least one numerical",
-          }));
-        } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "Password must contain at least special character",
-          }));
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "",
-          }));
-        }
-        break;
-
-      case "confirmpassword":
-        if (value.length === 0) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            confirmpassword: "Password is Required",
-          }));
-          return;
-        } else if (value !== informationdata.password) {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            confirmpassword: "Password do not match",
-          }));
-          return;
-        } else {
-          setvaliderrors((prevErrors) => ({
-            ...prevErrors,
-            password: "",
-          }));
-          return;
-        }
-        break;
-    }
+    validateField(field, value);
   };
 
   // Fetching the Province, City, barangay
@@ -642,14 +482,21 @@ const Register = () => {
 
         // Setting a timer of the text before disappearing
         setTimeout(() => {
-          setVisibleErrors((prevErrors) => {
-            const { [key]: removed, ...rest } = prevErrors;
-            return rest;
-          });
+          setVisibleErrors((prevErrors) => ({
+            ...prevErrors,
+            [key]: "",
+          }));
         }, 3000);
       }
     });
   }, [errors]);
+
+  // Effects for restricting future dates
+  useEffect(() => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[-1];
+    setMaxDate(formattedDate);
+  }, []);
 
   // Go to Login
   const GotoLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -670,7 +517,7 @@ const Register = () => {
     });
 
     register(informationdata);
-    // router.push("/confirmation/");
+    router.push("/confirmation/");
   };
 
   return (
@@ -723,7 +570,7 @@ const Register = () => {
               )}
             </div>
 
-            <div className="flex justify-between space-x-5">
+            <div className="flex space-x-5">
               <div className="flex flex-col justify-evenly">
                 <label
                   htmlFor="firstname"
@@ -788,7 +635,8 @@ const Register = () => {
                 )}
               </div>
             </div>
-            <div className="flex justify-between space-x-5">
+
+            <div className="flex space-x-5 pt-4">
               <div className="flex flex-col justify-evenly">
                 <label htmlFor="lastname" className="block text-lg font-medium">
                   <div className="flex">
@@ -877,7 +725,53 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-between">
+          <div className="flex items-center space-x-5 pt-4">
+            <div className="flex flex-col">
+              <label htmlFor="birthdate" className="block text-lg font-medium">
+                <div className="flex">
+                  <p>Birthdate</p>
+                  {informationdata.birthdate === "" && (
+                    <p className="text-red-600">*</p>
+                  )}
+                </div>
+              </label>
+              <input
+                type="date"
+                name="birthdate"
+                id="birthdate"
+                value={informationdata.birthdate}
+                onChange={(e) => handleChange(e, "birthdate")}
+                className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                max={maxDate}
+              />
+              {validerrors.birthdate && (
+                <p className="text-red-600 text-[10px]">
+                  * {validerrors.birthdate}
+                </p>
+              )}
+              {visibleErrors.birthdate && (
+                <p className="text-red-600 text-[10px]">
+                  * {visibleErrors.birthdate}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="age" className="font-bold">
+                Age
+              </label>
+              <input
+                type="text"
+                name="age"
+                id="age"
+                value={informationdata.age}
+                onChange={(e) => handleChange(e, "age")}
+                className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap space-x-5 pt-4">
             <div className="mb-4">
               <label htmlFor="username" className="block text-lg font-medium">
                 <div className="flex">
@@ -960,7 +854,7 @@ const Register = () => {
                 id="address1"
                 name="address1"
                 value={informationdata.address1}
-                onChange={(e) => handleChange(e, "")}
+                onChange={(e) => handleChange(e, "address1")}
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>

@@ -15,6 +15,8 @@ export interface UserData {
   lastname: string;
   sex: string;
   suffixes: string;
+  birthdate: string;
+  age: number;
   username: string;
   emailaddress: string;
   address1: string;
@@ -68,6 +70,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     if (!user.honorific) validationError.honorific = "Honorific is required.";
     if (!user.firstname) validationError.firstname = "First name is required.";
     if (!user.lastname) validationError.lastname = "Last name is required.";
+    if (!user.birthdate) validationError.username = "Birthdate is required.";
     if (!user.username) validationError.username = "Username is required.";
     if (!user.emailaddress)
       validationError.emailaddress = "Email address is required.";

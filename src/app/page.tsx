@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
 
+  const GoToRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    router.push("/register/");
+  };
+
   return (
     <div className="container mx-auto p-5 my-5">
       <div className="flex flex-wrap">
@@ -73,7 +79,7 @@ export default function Home() {
             <span className="text-sm">No Account? </span>
             <button
               className="text-blue-600 text-sm hover:text-bg-red-800"
-              onClick={() => router.push("/register/")}
+              onClick={GoToRegister}
             >
               Sign Up
             </button>
