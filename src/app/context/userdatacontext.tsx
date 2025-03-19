@@ -20,6 +20,7 @@ export interface UserData {
   username: string;
   emailaddress: string;
   address1: string;
+  region: string;
   barangay: string;
   city: string;
   province: string;
@@ -32,7 +33,11 @@ interface UserDataContextType {
   currentUser: UserData | null;
   userInformation: UserData[];
   errors: Record<string, string>;
+  registrationSuccess: boolean | null;
+  updateSuccess: boolean | null;
+  resetUpdateSuccess: () => void;
   register: (user: UserData) => void;
+  updateUser: (user: UserData) => void;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
@@ -43,6 +48,10 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [userInformation, setUserInformation] = useState<UserData[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [registrationSuccess, setRegistrationSuccess] = useState<
+    boolean | null
+  >(null);
+  const [updateSuccess, setupdateSuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -54,6 +63,10 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, []);
+
+  const resetUpdateSuccess = () => {
+    setupdateSuccess(false);
+  };
 
   const isUsernameTaken = (username: string) => {
     return userInformation.some((user) => user.username === username);
@@ -75,7 +88,9 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     if (!user.emailaddress)
       validationError.emailaddress = "Email address is required.";
     if (!user.sex) validationError.sex = "Sex is required.";
-    if (!user.province) validationError.province = "Province is required.";
+    if (!user.region) validationError.region = "Region is required.";
+    if (user.region !== "130000000" && !user.province)
+      validationError.province = "Province is required.";
     if (!user.city) validationError.city = "City is required.";
     if (!user.barangay) validationError.barangay = "Barangay is required.";
     if (!user.password) validationError.password = "Password is required.";
@@ -123,7 +138,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       if (!/[0-9]/.test(user.password)) {
         passwordError += "Password must contain at least one numericals.";
       }
-      if (!/[!@#$%^&*(),.?":{}|<>]/.test(user.password)) {
+      if (!/[!@#$%^&*(),.?":{}|<>_]/.test(user.password)) {
         passwordError +=
           "Password must contain at least one special character.";
       }
@@ -161,8 +176,10 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     const validationError = validateUserData(user);
 
     if (Object.keys(validationError).length > 0) {
+      console.log(user.province);
       setErrors(validationError);
       console.log(validationError);
+      setRegistrationSuccess(false);
       return;
     }
 
@@ -174,7 +191,22 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("userInformation", JSON.stringify(newUsers));
 
     setCurrentUser(user);
+    setRegistrationSuccess(true);
     alert("User Registered Successfully");
+  };
+
+  const updateUser = (updateUser: Partial<UserData>) => {
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, ...updateUser };
+    const updatedUsers = userInformation.map((user) =>
+      user.id === currentUser.id ? updatedUser : user
+    );
+
+    setUserInformation(updatedUsers);
+    setCurrentUser(updatedUser);
+    setupdateSuccess(true);
+    alert("User Update Successfully");
   };
 
   return (
@@ -183,7 +215,11 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
         currentUser,
         userInformation,
         errors,
+        registrationSuccess,
+        updateSuccess,
+        resetUpdateSuccess,
         register,
+        updateUser,
       }}
     >
       {children}

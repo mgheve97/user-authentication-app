@@ -8,7 +8,7 @@ export default function Home() {
   const GoToRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    router.push("/register/");
+    router.push("/user/register/");
   };
 
   return (
