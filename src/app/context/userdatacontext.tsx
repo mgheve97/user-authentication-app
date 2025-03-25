@@ -29,6 +29,12 @@ export interface UserData {
   confirmpassword: string;
 }
 
+interface logindata {
+  username: string;
+  password: string;
+  rememberMe: boolean;
+}
+
 interface UserDataContextType {
   currentUser: UserData | null;
   userInformation: UserData[];
@@ -38,6 +44,8 @@ interface UserDataContextType {
   resetUpdateSuccess: () => void;
   register: (user: UserData) => void;
   updateUser: (user: UserData) => void;
+  login: (user: logindata) => void;
+  loginSuccess: boolean | null;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
@@ -52,6 +60,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     boolean | null
   >(null);
   const [updateSuccess, setupdateSuccess] = useState<boolean | null>(null);
+  const [loginSuccess, setloginSuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -209,6 +218,38 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     alert("User Update Successfully");
   };
 
+  const validateLoginCredential = (user: logindata) => {
+    const validationError: Record<string, string> = {};
+
+    if (!user.username) validationError.username = "Username is required.";
+    if (!user.password) validationError.password = "Password is required.";
+
+    return validationError;
+  };
+
+  const login = (user: logindata) => {
+    const validationError = validateLoginCredential(user);
+
+    if (Object.keys(validationError).length > 0) {
+      setErrors(validationError);
+      setloginSuccess(false);
+      return;
+    }
+
+    const foundUser = userInformation.find(
+      (u) => u.username === user.username && u.password === user.password
+    );
+
+    if (!foundUser) {
+      setErrors({ username: "Invalid Username or password." });
+      return;
+    }
+
+    setCurrentUser(foundUser);
+    setloginSuccess(true);
+    alert("Login successful");
+  };
+
   return (
     <UserDataContext.Provider
       value={{
@@ -220,6 +261,8 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
         resetUpdateSuccess,
         register,
         updateUser,
+        login,
+        loginSuccess,
       }}
     >
       {children}

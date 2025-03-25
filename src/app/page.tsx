@@ -1,15 +1,64 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState, useEffect, FormEvent } from "react";
+import { useUserData } from "./context/userdatacontext";
+
+type FieldNames = "username" | "password" | "rememberMe";
 
 export default function Home() {
   const router = useRouter();
+
+  const { login, errors, loginSuccess } = useUserData();
+
+  const [logininfo, setLoginInfo] = useState({
+    username: "",
+    password: "",
+    rememberMe: false,
+  });
+
+  // Errors
+  const [validerrors, setvaliderrors] = useState<{ [key: string]: string }>({});
+  const [visibleErrors, setVisibleErrors] = useState<{ [key: string]: string }>(
+    {}
+  );
+
+  const handleValidation = () => {};
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked, value } = e.target;
+
+    setLoginInfo((prevInfo) => ({
+      ...prevInfo,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const GoToRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     router.push("/user/register/");
   };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    login(logininfo);
+  };
+
+  useEffect(() => {
+    console.log(logininfo);
+  }, [logininfo]);
+
+  // Handling the registration if success or not
+  useEffect(() => {
+    // When registrationSuccess state changes, handle routing
+    if (loginSuccess) {
+      router.push("/home/");
+    } else if (loginSuccess === false) {
+      alert("Login failed");
+    }
+  }, [loginSuccess, router]);
 
   return (
     <div className="container mx-auto p-5 my-5">
@@ -27,26 +76,36 @@ export default function Home() {
         <form className="w-full md:w-1/2">
           <h1 className="text-center text-2xl font-bold">SIGN IN!</h1>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-lg font-medium">
-              Email address
+            <label htmlFor="Username" className="block text-lg font-medium">
+              <div className="flex">
+                <p>Username:</p>
+                {logininfo.username === "" && <p className="text-red-600">*</p>}
+              </div>
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
+              type="text"
+              id="username"
+              name="username"
+              value={logininfo.username}
+              onChange={handleChange}
               className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div className="mb-4">
             <label htmlFor="password" className="block text-lg font-medium">
-              Password:{" "}
+              <div className="flex">
+                <p>Password: </p>
+                {logininfo.password === "" && <p className="text-red-600">*</p>}
+              </div>
             </label>
             <div className="relative">
               <input
                 type="password"
                 id="password"
                 name="password"
+                value={logininfo.password}
+                onChange={handleChange}
                 className="block w-full px-4 py-2 text-lg border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
@@ -58,7 +117,14 @@ export default function Home() {
 
           <div className="flex justify-between items-center mx-4 mb-4">
             <div>
-              <input type="checkbox" id="rememberMe" className="mr-2" />
+              <input
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                className="mr-2"
+                checked={logininfo.rememberMe}
+                onChange={handleChange}
+              />
               <label htmlFor="rememberMe" className="text-sm">
                 Remember me
               </label>
@@ -71,6 +137,7 @@ export default function Home() {
           <button
             className="mb-4 w-full py-2 bg-indigo-600 text-white rounded-md text-lg hover:bg-indigo-700"
             type="submit"
+            onClick={handleLogin}
           >
             Sign in
           </button>
