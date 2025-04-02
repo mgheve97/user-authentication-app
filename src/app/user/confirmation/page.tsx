@@ -11,7 +11,6 @@ const Confirmation = () => {
   const [provinceName, setProvinceName] = useState<string>("");
   const [cityName, setCityName] = useState<string>("");
   const [barangayName, setBarangayName] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
 
   // Redirect to register page if the user has not register
   useEffect(() => {
@@ -51,17 +50,25 @@ const Confirmation = () => {
             ),
           ]);
 
-          const region = regions.find((r) => r.code === regionCode);
-          const province = provinces.find((p) => p.code === provinceCode);
-          const city = cities.find((c) => c.code === cityCode);
-          const barangay = barangays.find((b) => b.code === barangayCode);
+          const region = regions.find(
+            (r: { code: string }) => r.code === regionCode
+          );
+          const province = provinces.find(
+            (p: { code: string }) => p.code === provinceCode
+          );
+          const city = cities.find(
+            (c: { code: string }) => c.code === cityCode
+          );
+          const barangay = barangays.find(
+            (b: { code: string }) => b.code === barangayCode
+          );
 
           setRegionName(region?.name || "Unknown Region");
           setProvinceName(province?.name || "Unknown Province");
           setCityName(city?.name || "Unknown City");
           setBarangayName(barangay?.name || "Unknown Barangay");
         } catch (error) {
-          setError("Failed to fetch location names.");
+          alert("Failed to fetch location names.");
           console.error("Error fetching location names: ", error);
         }
       };

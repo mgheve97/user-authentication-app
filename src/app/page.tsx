@@ -1,29 +1,19 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import { useUserData } from "./context/userdatacontext";
-
-type FieldNames = "username" | "password" | "rememberMe";
 
 export default function Home() {
   const router = useRouter();
 
-  const { login, errors, loginSuccess } = useUserData();
+  const { login, loginSuccess } = useUserData();
 
   const [logininfo, setLoginInfo] = useState({
     username: "",
     password: "",
     rememberMe: false,
   });
-
-  // Errors
-  const [validerrors, setvaliderrors] = useState<{ [key: string]: string }>({});
-  const [visibleErrors, setVisibleErrors] = useState<{ [key: string]: string }>(
-    {}
-  );
-
-  const handleValidation = () => {};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target;
